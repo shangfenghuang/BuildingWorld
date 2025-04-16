@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="shangfeng@10.13.110.43:22 password" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="lin2">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/media/shangfeng/storage/shangfeng/BuildingWorld/Calgary/code" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="root@10.87.0.230:8080 password (3)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="shangfeng@10.13.110.43:22 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/media/shangfeng/storage/shangfeng/BuildingWorld/Calgary/code" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
