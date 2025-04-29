@@ -60,8 +60,16 @@ def coordinate_transformation(obj_file, wld3_file):
     # read mesh
     vertices, faces = read_mesh(obj_file)
 
-    vertices = vertices + g1
+    # Rotation Matrix
+    R = np.array([
+        [1, 0, 0],
+        [0, 0, -1],
+        [0, 1, 0]
+    ])
+
+    vertices = (R @ vertices.T).T + g1
     return vertices, faces
+
 
 if __name__ == '__main__':
     mesh_folder_list = '/media/shangfeng/storage/shangfeng/BuildingWorld/Montreal/obj'
