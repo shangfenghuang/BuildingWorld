@@ -12,7 +12,7 @@
       <paths name="shangfeng@10.13.110.43:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/media/shangfeng/storage/shangfeng/BuildingWorld/BuildingWorld" local="$PROJECT_DIR$" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
