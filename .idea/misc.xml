@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="BuildingWorld" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Helios" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Remote Python 3.9.21 (sftp://shangfeng@10.13.110.43:22/home/shangfeng/anaconda3/envs/BuildingWorld/bin/python)" project-jdk-type="Python SDK" />
 </project>
