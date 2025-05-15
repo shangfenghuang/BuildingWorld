@@ -46,8 +46,6 @@ class OBJViewerApp:
         # 材质
         material = rendering.MaterialRecord()
         material.shader = "defaultLit"
-        material
-        # material.shader = "defaultLitFlat"
         material.base_color = [0.8, 0.8, 0.8, 1.0]  # 灰白色
         # material.metallic = 0.0
         # material.roughness = 0.7
