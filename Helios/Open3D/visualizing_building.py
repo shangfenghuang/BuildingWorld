@@ -72,6 +72,6 @@ class OBJViewerApp:
 # 替换为你的模型路径
 if __name__ == "__main__":
     # obj_path = r"D:\BuildingWorld\Helios\Open3D\CDNNDG01_1.obj"  # ← 修改为你的路径
-    obj_path = r"C:\Users\Ethan\Desktop\Montreal_Helios_shapefile_test\Montreal_Helios_test.obj"
+    obj_path = r"C:\Users\12617\Desktop\Montreal_Helios_shapefile_test\Montreal_Helios_test.obj"
     app = OBJViewerApp(obj_path)
     app.run()

@@ -11,9 +11,10 @@
 import open3d as o3d
 import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
+import trimesh
 from pathlib import Path
 
-def extract_texture_from_mtl(mtl_path: Path) -> Path | None:
+def extract_texture_from_mtl(mtl_path: Path):
     with open(mtl_path, 'r') as f:
         for line in f:
             if line.strip().lower().startswith('map_kd'):
@@ -55,11 +56,18 @@ def load_textured_obj(obj_path: Path, scale_factor=1.0):
     return mesh, mat
 
 def load_plain_obj(obj_path: Path, scale_factor=1.0, color=[0.8, 0.8, 0.8]):
-    mesh = o3d.io.read_triangle_mesh(str(obj_path))
-    mesh.compute_vertex_normals()
+    tm = trimesh.load(obj_path, force='mesh')
+
+    mesh = o3d.geometry.TriangleMesh()
+    mesh.vertices = o3d.utility.Vector3dVector(tm.vertices)
+    mesh.triangles = o3d.utility.Vector3iVector(tm.faces)
+    mesh.compute_triangle_normals()
+
     bbox = mesh.get_axis_aligned_bounding_box()
     center = bbox.get_center()
-    mesh.scale(scale_factor, center)
+    mesh.translate(-bbox.get_center())
+    # mesh.scale(1.0 / bbox.get_extent().max(), center=(0, 0, 0))
+    mesh.scale(scale_factor, center=(0, 0, 0))
 
     mat = rendering.MaterialRecord()
     mat.shader = "defaultLit"
@@ -76,8 +84,17 @@ class SceneViewer:
         self.window.add_child(self.scene_widget)
 
         # 加载模型
-        self.building, mat1 = load_plain_obj(building_obj, scale_factor=2.0)
-        self.airplane, mat2 = load_textured_obj(aircraft_obj, scale_factor=2.0)
+        self.building, mat1 = load_plain_obj(building_obj, scale_factor=1.0)
+        self.airplane, mat2 = load_textured_obj(aircraft_obj, scale_factor=100.0)
+        offset = self.building.get_axis_aligned_bounding_box().get_center()
+        extent = self.building.get_axis_aligned_bounding_box().get_extent()
+        print(offset)
+        print(extent)
+        self.airplane.translate([0, 0, 20])
+        offset = self.airplane.get_axis_aligned_bounding_box().get_center()
+        extent = self.airplane.get_axis_aligned_bounding_box().get_extent()
+        print(offset)
+        print(extent)
 
         self.scene_widget.scene.set_background([1, 1, 1, 1])
         self.scene_widget.scene.set_lighting(rendering.Open3DScene.LightingProfile.NO_SHADOWS, [0, -1, -1])
@@ -89,7 +106,8 @@ class SceneViewer:
 
     def setup_camera(self):
         bbox = self.building.get_axis_aligned_bounding_box()
-        bbox += self.airplane.get_axis_aligned_bounding_box()  # 合并包围盒
+        # print(bbox.get_center())
+        # bbox += self.airplane.get_axis_aligned_bounding_box()  # 合并包围盒
         center = bbox.get_center()
         extent = bbox.get_extent().max()
         eye = center + [0, 0, extent * 2]
@@ -100,8 +118,8 @@ class SceneViewer:
 
 
 if __name__ == "__main__":
-    aircraft_obj = Path("aircraft/sr22.obj")     # ✏️ 修改为你飞机模型路径
-    building_obj = Path("buildings/building.obj") # ✏️ 修改为你建筑模型路径
+    aircraft_obj = Path(r"E:\BuildingWorld\BuildingWorld\Helios\assets\models\platforms\sr22\sr22.obj")     # ✏️ 修改为你飞机模型路径
+    building_obj = Path(r"C:\Users\12617\Desktop\Montreal_Helios_shapefile_test\Montreal_Helios_test.obj") # ✏️ 修改为你建筑模型路径
 
     app = SceneViewer(aircraft_obj, building_obj)
     app.run()

@@ -64,6 +64,6 @@ class PointCloudViewer:
         gui.Application.instance.run()
 
 if __name__ == "__main__":
-    pcd_path = Path(r"D:\BuildingWorld\Helios\output\Montreal_20000_30_1200_80_200\2025-05-10_19-57-23\leg000_points.xyz")  # ✏️ 替换为你的路径，例如 .ply/.xyz/.pcd
+    pcd_path = Path(r"E:\BuildingWorld\BuildingWorld\output\Montreal_20000_30_1200_80_200\2025-05-08_19-44-20\leg000_points.xyz")  # ✏️ 替换为你的路径，例如 .ply/.xyz/.pcd
     app = PointCloudViewer(pcd_path)
     app.run()
