@@ -84,13 +84,13 @@ class SceneViewer:
         self.window.add_child(self.scene_widget)
 
         # 加载模型
-        self.building, mat1 = load_plain_obj(building_obj, scale_factor=1.0)
-        self.airplane, mat2 = load_textured_obj(aircraft_obj, scale_factor=100.0)
+        self.building, mat1 = load_plain_obj(building_obj, scale_factor=1.0, color=[0.55, 0.27, 0.07])
+        self.airplane, mat2 = load_textured_obj(aircraft_obj, scale_factor=50.0)
         offset = self.building.get_axis_aligned_bounding_box().get_center()
         extent = self.building.get_axis_aligned_bounding_box().get_extent()
         print(offset)
         print(extent)
-        self.airplane.translate([0, 0, 20])
+        self.airplane.translate([0, 0, 1200])
         offset = self.airplane.get_axis_aligned_bounding_box().get_center()
         extent = self.airplane.get_axis_aligned_bounding_box().get_extent()
         print(offset)
