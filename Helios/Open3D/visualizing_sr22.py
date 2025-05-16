@@ -13,7 +13,7 @@ import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
 from pathlib import Path
 
-def extract_texture_from_mtl(mtl_path: Path) -> Path | None:
+def extract_texture_from_mtl(mtl_path: Path):
     """
     从 .mtl 文件中提取第一个 map_Kd 的纹理路径
     """
@@ -96,6 +96,6 @@ class TexturedOBJViewer:
 
 
 if __name__ == "__main__":
-    obj_path = Path("D:/BuildingWorld/Helios/assets/models/platforms/sr22/sr22.obj")  # 修改为你的路径
+    obj_path = Path(r"E:\BuildingWorld\BuildingWorld\Helios\assets\models\platforms\sr22\sr22.obj")  # 修改为你的路径
     app = TexturedOBJViewer(obj_path)
     app.run()
