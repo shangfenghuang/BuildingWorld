@@ -12,6 +12,8 @@ import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
 import numpy as np
 
+
+
 class TimeResponsiveViewer:
     def __init__(self, points, times, frame_edges):
         self.points = points
@@ -36,8 +38,20 @@ class TimeResponsiveViewer:
 
         self.scene_widget.scene.add_geometry("pcd", self.pcd, self.mat)
         self.setup_camera()
+        # self.window.set_on_timer(self.update, 500)  # 每帧 500ms
 
         gui.Application.instance.post_to_main_thread(self.window, self.update)
+        self.schedule_next_frame()  # 启动动画
+        self.scene_widget.force_redraw()
+
+        def simulate_mouse_wheel_scroll():
+            import ctypes
+            import ctypes.wintypes
+
+            MOUSEEVENTF_WHEEL = 0x0800
+            delta = 120  # 一格滚动
+            x, y = ctypes.windll.user32.GetCursorPosW(), ctypes.windll.user32.GetCursorPosW()
+            ctypes.windll.user32.mouse_event(MOUSEEVENTF_WHEEL, 0, 0, delta, 0)
 
     def setup_camera(self):
         dummy = o3d.geometry.PointCloud()
@@ -52,6 +66,13 @@ class TimeResponsiveViewer:
 
         eye = center + [0, 0, extent * 2]
         self.scene_widget.scene.camera.look_at(center, eye, [0, 1, 0])
+
+    def schedule_next_frame(self):
+        import threading
+        threading.Timer(0.05, self.update_on_timer).start()
+
+    def update_on_timer(self):
+        gui.Application.instance.post_to_main_thread(self.window, self.update)
 
     def update(self):
         if self.cur_frame >= len(self.frame_edges) - 1:
@@ -78,21 +99,16 @@ class TimeResponsiveViewer:
 
         self.cur_frame += 1
         self.scene_widget.force_redraw()
-        gui.Application.instance.run_one_tick()
-        print(self.cur_frame)
-
-        # 每帧延时（你可以用 threading.Timer 或 GUI 定时器进一步改进）
-        import time
-        # self.window.set_on_key(self.on_key_event)
-        time.sleep(2)
-        self.update()
-
-    def on_key_event(self, event):
-        if event.type == gui.KeyEvent.DOWN:
-            print(f"任意键被按下：{event.key}")
-            self.update()  # 或播放动画
-            return gui.Widget.EventCallbackResult.HANDLED
-        return gui.Widget.EventCallbackResult.IGNORED
+        self.schedule_next_frame()
+        # self.scene_widget.force_redraw()
+        # gui.Application.instance.run_one_tick()
+        # print(self.cur_frame)
+        #
+        # # 每帧延时（你可以用 threading.Timer 或 GUI 定时器进一步改进）
+        # import time
+        # # self.window.set_on_key(self.on_key_event)
+        # time.sleep(0.5)
+        # self.update()
 
     def run(self):
         gui.Application.instance.run()
@@ -104,7 +120,7 @@ if __name__ == "__main__":
     sorted_indices = np.argsort(times)
     points = points[sorted_indices]
     times = times[sorted_indices]
-    frame_edges = np.arange(times.min(), times.max(), 2)
+    frame_edges = np.arange(times.min(), times.max(), 0.05)
 
     viewer = TimeResponsiveViewer(points, times, frame_edges)
     viewer.run()
