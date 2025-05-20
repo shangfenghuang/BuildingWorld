@@ -13,6 +13,8 @@ import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
 import numpy as np
 from pathlib import Path
+import threading
+import time
 
 def load_point_cloud(pcd_path: Path, scale_factor=1.0, color=[0.1, 0.6, 1.0]):
     if pcd_path.suffix in ['.ply', '.pcd']:
@@ -51,7 +53,8 @@ class PointCloudViewer:
         self.scene_widget.scene.set_lighting(rendering.Open3DScene.LightingProfile.NO_SHADOWS, [0, -1, -1])
         self.scene_widget.scene.add_geometry("pointcloud", self.pcd, self.material)
 
-        self.setup_camera()
+        # self.setup_camera()
+        gui.Application.instance.post_to_main_thread(self.window, self.setup_camera)
 
     def setup_camera(self):
         bbox = self.pcd.get_axis_aligned_bounding_box()
@@ -59,6 +62,12 @@ class PointCloudViewer:
         extent = bbox.get_extent().max()
         eye = center + [0, 0, extent * 2]
         self.scene_widget.scene.camera.look_at(center, eye, [0, 1, 0])
+
+        eye_shifted = eye + [0.0001, 0, 0]
+        self.scene_widget.scene.camera.look_at(center, eye_shifted, [0, 1, 0])
+        self.scene_widget.scene.camera.look_at(center, eye, [0, 1, 0])
+        self.window.post_redraw()
+
 
     def run(self):
         gui.Application.instance.run()
