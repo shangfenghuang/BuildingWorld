@@ -65,6 +65,9 @@ if __name__ == '__main__':
         actor = apply_texture(plotter, mesh_copy, geom, name=f"sr22_{idx}")
         actor_refs.append((actor, mesh_copy))
 
+    plotter.view_xy()
+    plotter.reset_camera()
+
     # Animation
     step = [1]
 
