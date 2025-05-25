@@ -27,7 +27,7 @@ def load_sr22_mesh(sr22_path):
     meshes = []
     for name, geom in scene.geometry.items():
         mesh = pv.wrap(geom)
-        mesh.scale(50.0, inplace=True)
+        mesh.scale(30.0, inplace=True)
         meshes.append((mesh, geom))
     return meshes
 
@@ -45,19 +45,19 @@ if __name__ == '__main__':
     plotter = pv.Plotter(window_size=(1000, 800))
     plotter.add_axes()
 
-    # Add building
+    # -------------------------------------- Add building -------------------------------------------
     building_path = r"C:\Users\12617\Desktop\Montreal_Helios_shapefile_test\Montreal_Helios_test.obj"
-    _ = add_building(building_path, plotter)
+    building_center = add_building(building_path, plotter)
 
-    # Load model
+    # -------------------------------------- Load model ---------------------------------------------
     sr22_path = r"E:\BuildingWorld\BuildingWorld\Helios\assets\models\platforms\sr22\sr22.obj"
     sr22_meshes = load_sr22_mesh(sr22_path)
 
-    # Load trajectory
+    # -------------------------------------- Load trajectory ----------------------------------------
     traj_path = r"E:\BuildingWorld\BuildingWorld\output\Montreal_20000_30_1200_80_200\2025-05-08_19-44-20\leg000_trajectory.txt"
     trajectory = load_trajectory(traj_path)
 
-    # Add sr22 model at first frame
+    # -------------------------------------- Add sr22 model at first frame --------------------------
     actor_refs = []
     for idx, (mesh, geom) in enumerate(sr22_meshes):
         mesh_copy = mesh.copy()
@@ -65,8 +65,22 @@ if __name__ == '__main__':
         actor = apply_texture(plotter, mesh_copy, geom, name=f"sr22_{idx}")
         actor_refs.append((actor, mesh_copy))
 
+    # -------------------------------------- Load point cloud ----------------------------------------
+    leg1_file = r"E:\BuildingWorld\BuildingWorld\output\Montreal_20000_30_1200_80_200\2025-05-08_19-44-20\leg000_points.xyz"
+    data = np.loadtxt(leg1_file)
+    xyz = data[:, :3]
+    gps_time = data[:, -1]
+
+    time_interval = 0.05
+    time_steps = np.arange(gps_time.min(), gps_time.max(), time_interval)
+
+    # ------------------------------------- Create empty PC object -------------------------------------
+    active_points = pv.PolyData(np.array(building_center))
+    points_actor = plotter.add_mesh(active_points, color=(0.9, 0.4, 0.1), point_size=1, render_points_as_spheres=True)
+
     plotter.view_xy()
     plotter.reset_camera()
+    # saved_camera = plotter.camera_position  # Save this
 
     # Animation
     step = [1]
@@ -75,9 +89,17 @@ if __name__ == '__main__':
         print(step[0])
         if step[0] >= len(trajectory):
             return
+
         offset = trajectory[step[0], :3] - trajectory[step[0] - 1, :3]
         for actor, mesh in actor_refs:
-            mesh.points += offset  # 直接修改 points 坐标
+            mesh.points += offset  # modify point coordination
+
+        mask = gps_time <= trajectory[step[0], 3]
+        visible_xyz = xyz[mask]
+        if len(visible_xyz) > 0:
+            new_cloud = pv.PolyData(visible_xyz)
+            points_actor.mapper.SetInputData(new_cloud)
+
         step[0] += 1
         plotter.render()
 
