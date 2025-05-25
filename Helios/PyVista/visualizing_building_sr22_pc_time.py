@@ -10,6 +10,8 @@
 import pyvista as pv
 import trimesh
 import numpy as np
+import time
+
 
 
 def add_building(path, plotter):
@@ -42,7 +44,7 @@ def apply_texture(plotter, mesh, geom, name):
 
 
 if __name__ == '__main__':
-    plotter = pv.Plotter(window_size=(1000, 800))
+    plotter = pv.Plotter(window_size=(1920, 1080))
     plotter.add_axes()
 
     # -------------------------------------- Add building -------------------------------------------
@@ -61,7 +63,7 @@ if __name__ == '__main__':
     actor_refs = []
     for idx, (mesh, geom) in enumerate(sr22_meshes):
         mesh_copy = mesh.copy()
-        mesh_copy.translate(trajectory[0, 0:3], inplace=True)
+        mesh_copy.translate(trajectory[50, 0:3], inplace=True)
         actor = apply_texture(plotter, mesh_copy, geom, name=f"sr22_{idx}")
         actor_refs.append((actor, mesh_copy))
 
@@ -82,27 +84,55 @@ if __name__ == '__main__':
     plotter.reset_camera()
     # saved_camera = plotter.camera_position  # Save this
 
-    # Animation
-    step = [1]
+    # ------------------------------------ Open video writer ------------------------------------------
+    plotter.open_movie(r"E:\BuildingWorld\BuildingWorld\Helios\PyVista/pointcloud_animation.mp4",
+                       framerate=30)  # or .avi
+    # plotter.show(auto_close=False)
 
-    def animation_callback(_):
-        print(step[0])
-        if step[0] >= len(trajectory):
-            return
+    for i in range(1, len(trajectory)):
+        print(f"Frame {i}")
 
-        offset = trajectory[step[0], :3] - trajectory[step[0] - 1, :3]
+        # sr22 move
+        offset = trajectory[i, :3] - trajectory[i - 1, :3]
         for actor, mesh in actor_refs:
-            mesh.points += offset  # modify point coordination
+            mesh.points += offset
 
-        mask = gps_time <= trajectory[step[0], 3]
+        # point cloud updated
+        mask = gps_time <= trajectory[i, 3]
         visible_xyz = xyz[mask]
         if len(visible_xyz) > 0:
             new_cloud = pv.PolyData(visible_xyz)
             points_actor.mapper.SetInputData(new_cloud)
 
-        step[0] += 1
         plotter.render()
+        plotter.write_frame()
+        time.sleep(0.05)
+
+    plotter.close()
 
 
-    plotter.add_on_render_callback(animation_callback)
-    plotter.show()
+    # ----------------------------------------- Animation -----------------------------------------------
+    # step = [1]
+    #
+    # def animation_callback(_):
+    #     print(step[0])
+    #     if step[0] >= len(trajectory):
+    #         return
+    #
+    #     offset = trajectory[step[0], :3] - trajectory[step[0] - 1, :3]
+    #     for actor, mesh in actor_refs:
+    #         mesh.points += offset  # modify point coordination
+    #
+    #     mask = gps_time <= trajectory[step[0], 3]
+    #     visible_xyz = xyz[mask]
+    #     if len(visible_xyz) > 0:
+    #         new_cloud = pv.PolyData(visible_xyz)
+    #         points_actor.mapper.SetInputData(new_cloud)
+    #
+    #     step[0] += 1
+    #     plotter.render()
+    #     plotter.write_frame()
+    #
+    #
+    # plotter.add_on_render_callback(animation_callback)
+    # plotter.show()
