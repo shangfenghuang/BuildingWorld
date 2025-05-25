@@ -44,7 +44,8 @@ def apply_texture(plotter, mesh, geom, name):
 
 
 if __name__ == '__main__':
-    plotter = pv.Plotter(window_size=(1920, 1080))
+    plotter = pv.Plotter(window_size=[1024, 768])
+    # plotter = pv.Plotter(window_size=(1920, 1080))
     plotter.add_axes()
 
     # -------------------------------------- Add building -------------------------------------------
@@ -58,12 +59,17 @@ if __name__ == '__main__':
     # -------------------------------------- Load trajectory ----------------------------------------
     traj_path = r"E:\BuildingWorld\BuildingWorld\output\Montreal_20000_30_1200_80_200\2025-05-08_19-44-20\leg000_trajectory.txt"
     trajectory = load_trajectory(traj_path)
+    dynamic_traj_points = [trajectory[0, :3]]
+    dynamic_traj_poly = pv.PolyData()
+    dynamic_traj_poly.points = np.array(dynamic_traj_points)
+    # dynamic_traj_poly.lines = np.array([])
+    trajectory_actor = plotter.add_mesh(dynamic_traj_poly, color='royalblue', line_width=2)
 
     # -------------------------------------- Add sr22 model at first frame --------------------------
     actor_refs = []
     for idx, (mesh, geom) in enumerate(sr22_meshes):
         mesh_copy = mesh.copy()
-        mesh_copy.translate(trajectory[50, 0:3], inplace=True)
+        mesh_copy.translate(trajectory[0, 0:3], inplace=True)
         actor = apply_texture(plotter, mesh_copy, geom, name=f"sr22_{idx}")
         actor_refs.append((actor, mesh_copy))
 
@@ -85,54 +91,74 @@ if __name__ == '__main__':
     # saved_camera = plotter.camera_position  # Save this
 
     # ------------------------------------ Open video writer ------------------------------------------
-    plotter.open_movie(r"E:\BuildingWorld\BuildingWorld\Helios\PyVista/pointcloud_animation.mp4",
-                       framerate=30)  # or .avi
-    # plotter.show(auto_close=False)
-
-    for i in range(1, len(trajectory)):
-        print(f"Frame {i}")
-
-        # sr22 move
-        offset = trajectory[i, :3] - trajectory[i - 1, :3]
-        for actor, mesh in actor_refs:
-            mesh.points += offset
-
-        # point cloud updated
-        mask = gps_time <= trajectory[i, 3]
-        visible_xyz = xyz[mask]
-        if len(visible_xyz) > 0:
-            new_cloud = pv.PolyData(visible_xyz)
-            points_actor.mapper.SetInputData(new_cloud)
-
-        plotter.render()
-        plotter.write_frame()
-        time.sleep(0.05)
-
-    plotter.close()
-
-
-    # ----------------------------------------- Animation -----------------------------------------------
-    # step = [1]
+    # plotter.open_movie(r"E:\BuildingWorld\BuildingWorld\Helios\PyVista/pointcloud_animation.mp4",
+    #                    framerate=30)  # or .avi
     #
-    # def animation_callback(_):
-    #     print(step[0])
-    #     if step[0] >= len(trajectory):
-    #         return
+    # for i in range(1, len(trajectory)):
+    #     print(f"Frame {i}")
     #
-    #     offset = trajectory[step[0], :3] - trajectory[step[0] - 1, :3]
+    #     # sr22 move
+    #     offset = trajectory[i, :3] - trajectory[i - 1, :3]
     #     for actor, mesh in actor_refs:
-    #         mesh.points += offset  # modify point coordination
+    #         mesh.points += offset
     #
-    #     mask = gps_time <= trajectory[step[0], 3]
+    #     # point cloud updated
+    #     mask = gps_time <= trajectory[i, 3]
     #     visible_xyz = xyz[mask]
     #     if len(visible_xyz) > 0:
     #         new_cloud = pv.PolyData(visible_xyz)
     #         points_actor.mapper.SetInputData(new_cloud)
     #
-    #     step[0] += 1
+    #     # Trajectory
+    #     dynamic_traj_points.append(trajectory[i, :3])
+    #     pts = np.array(dynamic_traj_points)
+    #     n = len(pts)
+    #     lines = np.hstack([[2, j, j + 1] for j in range(n - 1)])
+    #     dynamic_traj_poly.points = pts
+    #     if len(lines) > 0:
+    #         dynamic_traj_poly.lines = lines
+    #
     #     plotter.render()
     #     plotter.write_frame()
+    #     time.sleep(1/30)
     #
-    #
-    # plotter.add_on_render_callback(animation_callback)
-    # plotter.show()
+    # plotter.close()
+
+
+    # ----------------------------------------- Animation -----------------------------------------------
+    step = [1]
+
+    def animation_callback(_):
+        print(step[0])
+        if step[0] >= len(trajectory):
+            return
+
+        # sr22
+        offset = trajectory[step[0], :3] - trajectory[step[0] - 1, :3]
+        for actor, mesh in actor_refs:
+            mesh.points += offset  # modify point coordination
+
+        # building points
+        mask = gps_time <= trajectory[step[0], 3]
+        visible_xyz = xyz[mask]
+        if len(visible_xyz) > 0:
+            new_cloud = pv.PolyData(visible_xyz)
+            points_actor.mapper.SetInputData(new_cloud)
+
+        # Trajectory
+        dynamic_traj_points.append(trajectory[step[0], :3])
+        pts = np.array(dynamic_traj_points)
+        n = len(pts)
+        lines = np.hstack([[2, j, j + 1] for j in range(n - 1)])
+        dynamic_traj_poly.points = pts
+        if len(lines) > 0:
+            dynamic_traj_poly.lines = lines
+
+
+        step[0] += 1
+        plotter.render()
+
+
+
+    plotter.add_on_render_callback(animation_callback)
+    plotter.show()
