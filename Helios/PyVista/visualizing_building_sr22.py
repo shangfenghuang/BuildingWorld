@@ -23,7 +23,6 @@ print(mesh.center)
 # add mesh model
 plotter.add_mesh(mesh, color="lightgray")
 
-
 # ---------------------------------------- Loading Sr22 model ----------------------------------------
 sr22 = trimesh.load(r'E:\BuildingWorld\BuildingWorld\Helios\assets\models\platforms\sr22\sr22.obj', force='scene')
 for name, geom in sr22.geometry.items():
