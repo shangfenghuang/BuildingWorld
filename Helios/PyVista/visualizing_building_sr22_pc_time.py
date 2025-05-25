@@ -154,7 +154,26 @@ if __name__ == '__main__':
         if len(lines) > 0:
             dynamic_traj_poly.lines = lines
 
+        # scan area
+        mask = (gps_time <= trajectory[step[0], 3]) & (gps_time > trajectory[step[0] - 1, 3])
+        scan_points = xyz[mask]
+        lidar_pos = trajectory[step[0], :3]
+        if scan_points.shape[0] > 0:
+            ray_lines = []
+            for pt in scan_points:
+                ray = pv.Line(lidar_pos, pt)
+                ray_lines.append(ray)
+            ray_bundle = ray_lines[0]
+            for r in ray_lines[1:]:
+                ray_bundle += r
+            plotter.add_mesh(ray_bundle, color='red', line_width=1, name=f"lidar_rays_{step[0]}")
 
+        # if step[0] > 1:
+        #     prev_ray_name = f"lidar_rays_{step[0] - 1}"
+        #     if prev_ray_name in plotter.meshes:
+        #         plotter.remove_actor(prev_ray_name)
+
+        # add step
         step[0] += 1
         plotter.render()
 
