@@ -21,7 +21,7 @@ for name, geom in scene.geometry.items():
     # convert PyVista grid
     mesh = pv.wrap(geom)
 
-    # get materiale
+    # get material
     if hasattr(geom.visual, 'material') and geom.visual.material.image is not None:
         image = geom.visual.material.image
         print(image)
