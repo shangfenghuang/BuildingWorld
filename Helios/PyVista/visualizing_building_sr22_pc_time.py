@@ -148,7 +148,7 @@ if __name__ == '__main__':
 
         plotter.render()
         plotter.write_frame()
-        time.sleep(1/30)
+        time.sleep(1/15)
 
     plotter.close()
 
