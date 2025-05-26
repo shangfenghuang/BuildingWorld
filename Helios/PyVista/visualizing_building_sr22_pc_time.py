@@ -44,8 +44,8 @@ def apply_texture(plotter, mesh, geom, name):
 
 
 if __name__ == '__main__':
-    plotter = pv.Plotter(window_size=[1024, 768])
-    # plotter = pv.Plotter(window_size=(1920, 1080))
+    # plotter = pv.Plotter(window_size=[1024, 768])
+    plotter = pv.Plotter(window_size=(1920, 1080))
     plotter.add_axes()
 
     # -------------------------------------- Add building -------------------------------------------
@@ -90,63 +90,36 @@ if __name__ == '__main__':
     plotter.reset_camera()
     # saved_camera = plotter.camera_position  # Save this
 
+    # -------------------------------------------- LiDAR ray --------------------------------------------
+    # initial_ray = pv.Line([0, 0, 0], [0, 0, 0])
+    # ray_actor = plotter.add_mesh(initial_ray, color='red', line_width=1, name='lidar_rays')
+
+    # scan triangle area
+    initial_triangle = pv.PolyData(np.array([[0, 0, 0], [1, 0, 0], [0, 1, 0]]))
+    initial_triangle.faces = np.array([3, 0, 1, 2])
+    triangle_actor = plotter.add_mesh(initial_triangle, color='green', opacity=0.4, name='scan_triangle')
+
     # ------------------------------------ Open video writer ------------------------------------------
-    # plotter.open_movie(r"E:\BuildingWorld\BuildingWorld\Helios\PyVista/pointcloud_animation.mp4",
-    #                    framerate=30)  # or .avi
-    #
-    # for i in range(1, len(trajectory)):
-    #     print(f"Frame {i}")
-    #
-    #     # sr22 move
-    #     offset = trajectory[i, :3] - trajectory[i - 1, :3]
-    #     for actor, mesh in actor_refs:
-    #         mesh.points += offset
-    #
-    #     # point cloud updated
-    #     mask = gps_time <= trajectory[i, 3]
-    #     visible_xyz = xyz[mask]
-    #     if len(visible_xyz) > 0:
-    #         new_cloud = pv.PolyData(visible_xyz)
-    #         points_actor.mapper.SetInputData(new_cloud)
-    #
-    #     # Trajectory
-    #     dynamic_traj_points.append(trajectory[i, :3])
-    #     pts = np.array(dynamic_traj_points)
-    #     n = len(pts)
-    #     lines = np.hstack([[2, j, j + 1] for j in range(n - 1)])
-    #     dynamic_traj_poly.points = pts
-    #     if len(lines) > 0:
-    #         dynamic_traj_poly.lines = lines
-    #
-    #     plotter.render()
-    #     plotter.write_frame()
-    #     time.sleep(1/30)
-    #
-    # plotter.close()
+    plotter.open_movie(r"E:\BuildingWorld\BuildingWorld\Helios\PyVista/pointcloud_animation.mp4",
+                       framerate=30)  # or .avi
 
+    for i in range(1, len(trajectory)):
+        print(f"Frame {i}")
 
-    # ----------------------------------------- Animation -----------------------------------------------
-    step = [1]
-
-    def animation_callback(_):
-        print(step[0])
-        if step[0] >= len(trajectory):
-            return
-
-        # sr22
-        offset = trajectory[step[0], :3] - trajectory[step[0] - 1, :3]
+        # sr22 move
+        offset = trajectory[i, :3] - trajectory[i - 1, :3]
         for actor, mesh in actor_refs:
-            mesh.points += offset  # modify point coordination
+            mesh.points += offset
 
-        # building points
-        mask = gps_time <= trajectory[step[0], 3]
+        # point cloud updated
+        mask = gps_time <= trajectory[i, 3]
         visible_xyz = xyz[mask]
         if len(visible_xyz) > 0:
             new_cloud = pv.PolyData(visible_xyz)
             points_actor.mapper.SetInputData(new_cloud)
 
         # Trajectory
-        dynamic_traj_points.append(trajectory[step[0], :3])
+        dynamic_traj_points.append(trajectory[i, :3])
         pts = np.array(dynamic_traj_points)
         n = len(pts)
         lines = np.hstack([[2, j, j + 1] for j in range(n - 1)])
@@ -154,30 +127,95 @@ if __name__ == '__main__':
         if len(lines) > 0:
             dynamic_traj_poly.lines = lines
 
-        # scan area
-        mask = (gps_time <= trajectory[step[0], 3]) & (gps_time > trajectory[step[0] - 1, 3])
+        # scan triangle area
+        mask = (gps_time <= trajectory[i, 3]) & (gps_time > trajectory[i - 1, 3])
         scan_points = xyz[mask]
-        lidar_pos = trajectory[step[0], :3]
-        if scan_points.shape[0] > 0:
-            ray_lines = []
-            for pt in scan_points:
-                ray = pv.Line(lidar_pos, pt)
-                ray_lines.append(ray)
-            ray_bundle = ray_lines[0]
-            for r in ray_lines[1:]:
-                ray_bundle += r
-            plotter.add_mesh(ray_bundle, color='red', line_width=1, name=f"lidar_rays_{step[0]}")
+        lidar_pos = trajectory[i, :3]
+        scan_times = gps_time[mask]
+        if scan_points.shape[0] >= 2:
+            # time early and later point
+            t_min_idx = np.argmin(scan_times)
+            t_max_idx = np.argmax(scan_times)
+            pt_min = scan_points[t_min_idx]
+            pt_max = scan_points[t_max_idx]
 
-        # if step[0] > 1:
-        #     prev_ray_name = f"lidar_rays_{step[0] - 1}"
-        #     if prev_ray_name in plotter.meshes:
-        #         plotter.remove_actor(prev_ray_name)
+            triangle_pts = np.array([lidar_pos, pt_min, pt_max])
+            triangle = pv.PolyData(triangle_pts)
+            triangle.faces = np.array([3, 0, 1, 2])  # triangle faces
 
-        # add step
-        step[0] += 1
+            triangle_actor.mapper.SetInputData(triangle)
+
+
         plotter.render()
+        plotter.write_frame()
+        time.sleep(1/30)
+
+    plotter.close()
 
 
-
-    plotter.add_on_render_callback(animation_callback)
-    plotter.show()
+    # ----------------------------------------- Animation -----------------------------------------------
+    # step = [1]
+    #
+    # def animation_callback(_):
+    #     print(step[0])
+    #     if step[0] >= len(trajectory):
+    #         return
+    #
+    #     # sr22
+    #     offset = trajectory[step[0], :3] - trajectory[step[0] - 1, :3]
+    #     for actor, mesh in actor_refs:
+    #         mesh.points += offset  # modify point coordination
+    #
+    #     # building points
+    #     mask = gps_time <= trajectory[step[0], 3]
+    #     visible_xyz = xyz[mask]
+    #     if len(visible_xyz) > 0:
+    #         new_cloud = pv.PolyData(visible_xyz)
+    #         points_actor.mapper.SetInputData(new_cloud)
+    #
+    #     # Trajectory
+    #     dynamic_traj_points.append(trajectory[step[0], :3])
+    #     pts = np.array(dynamic_traj_points)
+    #     n = len(pts)
+    #     lines = np.hstack([[2, j, j + 1] for j in range(n - 1)])
+    #     dynamic_traj_poly.points = pts
+    #     if len(lines) > 0:
+    #         dynamic_traj_poly.lines = lines
+    #
+    #     # scan area
+    #     mask = (gps_time <= trajectory[step[0], 3]) & (gps_time > trajectory[step[0] - 1, 3])
+    #     scan_points = xyz[mask]
+    #     lidar_pos = trajectory[step[0], :3]
+    #     # if scan_points.shape[0] > 0:
+    #     #     n_samples = min(20, scan_points.shape[0])
+    #     #     idx = np.random.choice(scan_points.shape[0], n_samples, replace=False)
+    #     #     selected_pts = scan_points[idx]
+    #     #
+    #     #     rays = [pv.Line(lidar_pos, pt) for pt in selected_pts]
+    #     #     ray_bundle = rays[0]
+    #     #     for r in rays[1:]:
+    #     #         ray_bundle += r
+    #     #
+    #     #     ray_actor.mapper.SetInputData(ray_bundle)
+    #     scan_times = gps_time[mask]
+    #     if scan_points.shape[0] >= 2:
+    #         # 最早 & 最晚时间点
+    #         t_min_idx = np.argmin(scan_times)
+    #         t_max_idx = np.argmax(scan_times)
+    #         pt_min = scan_points[t_min_idx]
+    #         pt_max = scan_points[t_max_idx]
+    #
+    #         triangle_pts = np.array([lidar_pos, pt_min, pt_max])
+    #         triangle = pv.PolyData(triangle_pts)
+    #         triangle.faces = np.array([3, 0, 1, 2])  # 一个三角形面
+    #
+    #         triangle_actor.mapper.SetInputData(triangle)
+    #
+    #     # add step
+    #     step[0] += 1
+    #     plotter.render()
+    #
+    #
+    #
+    # plotter.add_on_render_callback(animation_callback)
+    # plotter.show()
