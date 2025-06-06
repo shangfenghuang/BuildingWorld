@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="BuildingWorld" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="BuildingWorld" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (arcgis_shangfeng)" project-jdk-type="Python SDK" />
 </project>
