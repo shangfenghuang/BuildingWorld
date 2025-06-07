@@ -13,7 +13,7 @@ from pathlib import Path
 import os
 
 # Load and parse the .meta4 XML file
-tree = ET.parse(r"E:\BuildingWorld\Munich\data\lod2.meta4")  # Replace with your meta4 file name
+tree = ET.parse(r"G:\BuildingWorld\Europe\Munich\09162.meta4")  # Replace with your meta4 file name
 root = tree.getroot()
 
 # Define the Metalink XML namespace
@@ -23,7 +23,7 @@ ns = {'ml': 'urn:ietf:params:xml:ns:metalink'}
 for file_elem in root.findall('ml:file', ns):
     filename = file_elem.get('name')  # Get the file name attribute
     urls = file_elem.findall('ml:url', ns)  # Get all available download URLs
-    file_path = os.path.join(r"E:\BuildingWorld\Munich\data", filename)
+    file_path = os.path.join(r"G:\BuildingWorld\Europe\Munich\data", filename)
     print(file_path)
 
     # Try downloading from each URL until successful
